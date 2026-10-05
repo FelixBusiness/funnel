@@ -125,6 +125,15 @@ function doPost(e) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
 
+  // Schnittstelle für die Seite aktion.html auf GitHub Pages (antwortet mit JSON).
+  // Die Links in den Mails zeigen auf diese Seite statt direkt auf Google – das vermeidet
+  // den Google-Fehler „Datei kann derzeit nicht geöffnet werden“ bei mehreren angemeldeten Konten.
+  if (p.aktion === 'api_bestaetigen' || p.aktion === 'api_abmelden') {
+    const ergebnis = statusSetzen_(p.token, p.aktion === 'api_bestaetigen' ? 'aktiv' : 'abgemeldet');
+    return json_(ergebnis ? { ok: true, vorname: String(ergebnis.vorname || '') } : { ok: false });
+  }
+
+  // Ältere Links, die direkt auf das Skript zeigen, funktionieren weiterhin
   if (p.aktion === 'bestaetigen') {
     const ergebnis = statusSetzen_(p.token, 'aktiv');
     if (!ergebnis) return seite_('Link ungültig', '<p>Dieser Bestätigungslink ist ungültig oder abgelaufen. Melde dich einfach erneut an.</p>' + knopf_(CONFIG.FUNNEL_URL, 'Zur Anmeldung'));
@@ -225,7 +234,7 @@ function anmelden_(d) {
 }
 
 function bestaetigungsmail_(email, vorname, token) {
-  const link = webAppUrl_() + '?aktion=bestaetigen&token=' + encodeURIComponent(token);
+  const link = aktionsLink_('bestaetigen', token);
   const hallo = vorname ? 'Hallo ' + esc_(vorname) + ',' : 'Hallo,';
   const html =
     '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1b2333;line-height:1.55">' +
@@ -573,7 +582,13 @@ function filter_(text) {
 }
 
 function abmeldelink_(token) {
-  return webAppUrl_() + '?aktion=abmelden&token=' + encodeURIComponent(token);
+  return aktionsLink_('abmelden', token);
+}
+
+/** Link auf die eigene Seite aktion.html (GitHub Pages), nicht direkt auf Google. */
+function aktionsLink_(aktion, token) {
+  const basis = CONFIG.FUNNEL_URL.replace(/\/?$/, '/');
+  return basis + 'aktion.html?aktion=' + aktion + '&token=' + encodeURIComponent(token);
 }
 
 function webAppUrl_() {

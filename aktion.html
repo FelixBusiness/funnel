@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Nebenwerte Wochenbrief</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --papier: #f4f1ea; --karte: #ffffff; --tinte: #14213a; --weich: #4a5568; --linie: #e3ddd0; --akzent: #14365c; }
+    @media (prefers-color-scheme: dark) {
+      :root { --papier: #0f1626; --karte: #182235; --tinte: #eef1f6; --weich: #a6b0c2; --linie: #2a3650; --akzent: #8fb4e3; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; background: var(--papier); color: var(--tinte); font-family: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.55; display: flex; align-items: flex-start; justify-content: center; padding: 10vh 16px 32px; }
+    .karte { width: 100%; max-width: 460px; background: var(--karte); border: 1px solid var(--linie); border-radius: 20px; padding: 32px 24px; box-shadow: 0 8px 24px rgba(20, 33, 58, .06); }
+    .symbol { font-size: 44px; margin-bottom: 8px; }
+    h1 { font-family: Fraunces, Georgia, serif; font-size: 28px; line-height: 1.15; margin: 0 0 10px; }
+    p { margin: 0 0 14px; color: var(--weich); }
+    .knopf { display: block; text-align: center; text-decoration: none; font-weight: 600; padding: 14px; border-radius: 14px; margin-top: 10px; background: var(--akzent); color: #fff; }
+    @media (prefers-color-scheme: dark) { .knopf { color: #0f1626; } }
+    .knopf.zweit { background: transparent; color: var(--akzent); border: 1.5px solid var(--linie); }
+    .lader { width: 28px; height: 28px; border: 3px solid var(--linie); border-top-color: var(--akzent); border-radius: 50%; animation: dreh 0.8s linear infinite; margin: 8px 0 16px; }
+    @keyframes dreh { to { transform: rotate(360deg); } }
+    .fuss { font-size: 12px; text-align: center; margin-top: 18px; }
+    .fuss a { color: var(--weich); }
+  </style>
+</head>
+<body>
+  <main class="karte" id="karte" aria-live="polite">
+    <div class="lader" aria-hidden="true"></div>
+    <h1>Einen Moment …</h1>
+    <p>Wir bearbeiten deine Anfrage.</p>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+  (async function () {
+    const C = window.NEWSLETTER_CONFIG;
+    const p = new URLSearchParams(location.search);
+    const aktion = p.get('aktion');
+    const token = p.get('token') || '';
+    const karte = document.getElementById('karte');
+    const startseite = new URL('./', location.href).href;
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function zeigen(symbol, titel, text, knoepfe) {
+      karte.innerHTML = '<div class="symbol" aria-hidden="true">' + symbol + '</div><h1>' + esc(titel) + '</h1>' +
+        text.map(t => '<p>' + esc(t) + '</p>').join('') +
+        (knoepfe || []).map(k => '<a class="knopf' + (k.zweit ? ' zweit' : '') + '" href="' + esc(k.href) + '"' + (k.neu ? ' target="_blank" rel="noopener"' : '') + '>' + esc(k.text) + '</a>').join('') +
+        '<div class="fuss"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></div>';
+      document.title = titel + ' – ' + C.NEWSLETTER_NAME;
+    }
+
+    if ((aktion !== 'bestaetigen' && aktion !== 'abmelden') || !token || !C.WEB_APP_URL) {
+      zeigen('🔗', 'Link unvollständig', ['Dieser Link ist unvollständig. Bitte öffne ihn direkt aus der E-Mail oder kopiere ihn vollständig.'],
+        [{ href: startseite, text: 'Zur Anmeldung' }]);
+      return;
+    }
+
+    async function anfragen() {
+      const url = C.WEB_APP_URL + '?aktion=api_' + aktion + '&token=' + encodeURIComponent(token);
+      // credentials: 'omit' – es werden bewusst keine Google-Anmeldedaten mitgeschickt
+      const antwort = await fetch(url, { credentials: 'omit', cache: 'no-store' });
+      return antwort.json();
+    }
+
+    let ergebnis;
+    try {
+      ergebnis = await anfragen();
+    } catch (e) {
+      try { await new Promise(r => setTimeout(r, 1500)); ergebnis = await anfragen(); } catch (e2) { ergebnis = null; }
+    }
+
+    if (!ergebnis) {
+      zeigen('⚠️', 'Das hat nicht geklappt', ['Wir konnten deine Anfrage gerade nicht bearbeiten. Bitte lade die Seite in einer Minute neu.'],
+        [{ href: location.href, text: 'Erneut versuchen' }]);
+      return;
+    }
+
+    if (aktion === 'bestaetigen') {
+      if (!ergebnis.ok) {
+        zeigen('🔗', 'Link ungültig', ['Dieser Bestätigungslink ist ungültig oder abgelaufen. Melde dich einfach erneut an – du bekommst dann einen neuen Link.'],
+          [{ href: startseite, text: 'Zur Anmeldung' }]);
+        return;
+      }
+      zeigen('✅', ergebnis.vorname ? 'Danke, ' + ergebnis.vorname + '!' : 'Danke!',
+        ['Deine Anmeldung ist bestätigt. Die nächste Ausgabe kommt am Sonntagabend in dein Postfach.', 'Bis dahin:'],
+        [{ href: C.WIKIFOLIO_URL, text: 'Musterportfolio auf Wikifolio ansehen', neu: true },
+         { href: C.INSTAGRAM_URL, text: 'Auf Instagram folgen', zweit: true, neu: true }]);
+      return;
+    }
+
+    if (!ergebnis.ok) {
+      zeigen('🔗', 'Link ungültig', ['Dieser Abmeldelink ist ungültig. Falls du weiterhin E-Mails bekommst, antworte einfach auf eine Ausgabe – wir tragen dich dann von Hand aus.']);
+      return;
+    }
+    zeigen('👋', 'Du bist abgemeldet', ['Du bekommst keine weiteren E-Mails mehr von uns. Schade, dass du gehst!', 'Versehentlich abgemeldet?'],
+      [{ href: startseite, text: 'Wieder anmelden', zweit: true }]);
+  })();
+  </script>
+</body>
+</html>

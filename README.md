@@ -20,6 +20,7 @@ Funnel (index.html, GitHub Pages) ──► Google Apps Script (Web-App) ──�
 | `fragen.js` | **Der Entscheidungsbaum.** Hier änderst du Fragen, Antworten und Pfade |
 | `config.js` | Web-App-Adresse, Name, Links |
 | `dashboard.html` | Auswertung: Abonnenten, Verlauf, Abbrüche, Antworten, Aktienwünsche |
+| `aktion.html` | Ziel der Bestätigungs- und Abmeldelinks aus den Mails (spricht im Hintergrund mit dem Skript) |
 | `apps-script/Code.gs` | Datenbank-Logik für Google Sheets |
 | `impressum.html`, `datenschutz.html` | Vorlagen – vor dem Livegang ausfüllen |
 
