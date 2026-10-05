@@ -69,6 +69,25 @@
       return antwort.json();
     }
 
+    // Erst nach einem echten Klick ausführen. E-Mail-Scanner (Outlook, GMX, Firmenpostfächer)
+    // öffnen Links automatisch – ohne diesen Schritt würden sie Adressen bestätigen oder abmelden.
+    await new Promise(function (weiter) {
+      const bestaetigen = aktion === 'bestaetigen';
+      karte.innerHTML =
+        '<div class="symbol" aria-hidden="true">' + (bestaetigen ? '✉️' : '👋') + '</div>' +
+        '<h1>' + (bestaetigen ? 'Nur noch ein Klick' : 'Newsletter abbestellen?') + '</h1>' +
+        '<p>' + (bestaetigen
+          ? 'Bestätige, dass du den kostenlosen ' + esc(C.NEWSLETTER_NAME) + ' einmal pro Woche erhalten möchtest.'
+          : 'Du bekommst dann keine weiteren Ausgaben des ' + esc(C.NEWSLETTER_NAME) + ' mehr.') + '</p>' +
+        '<button class="knopf" id="los" type="button" style="width:100%;border:none;font:inherit;font-weight:600;cursor:pointer">' +
+        (bestaetigen ? 'Anmeldung bestätigen' : 'Ja, abmelden') + '</button>' +
+        (bestaetigen ? '' : '<a class="knopf zweit" href="' + esc(startseite) + '">Doch nicht – angemeldet bleiben</a>');
+      document.getElementById('los').addEventListener('click', function () {
+        karte.innerHTML = '<div class="lader" aria-hidden="true"></div><h1>Einen Moment …</h1><p>Wir bearbeiten deine Anfrage.</p>';
+        weiter();
+      }, { once: true });
+    });
+
     let ergebnis;
     try {
       ergebnis = await anfragen();

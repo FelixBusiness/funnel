@@ -133,22 +133,11 @@ function doGet(e) {
     return json_(ergebnis ? { ok: true, vorname: String(ergebnis.vorname || '') } : { ok: false });
   }
 
-  // Ältere Links, die direkt auf das Skript zeigen, funktionieren weiterhin
-  if (p.aktion === 'bestaetigen') {
-    const ergebnis = statusSetzen_(p.token, 'aktiv');
-    if (!ergebnis) return seite_('Link ungültig', '<p>Dieser Bestätigungslink ist ungültig oder abgelaufen. Melde dich einfach erneut an.</p>' + knopf_(CONFIG.FUNNEL_URL, 'Zur Anmeldung'));
-    const hallo = ergebnis.vorname ? 'Danke, ' + esc_(ergebnis.vorname) + '!' : 'Danke!';
-    return seite_('Anmeldung bestätigt',
-      '<p class="gross">' + hallo + '</p><p>Deine Anmeldung ist bestätigt. Die nächste Ausgabe kommt am Sonntagabend in dein Postfach.</p>' +
-      '<p>Bis dahin:</p>' + knopf_(CONFIG.WIKIFOLIO_URL, 'Musterportfolio auf Wikifolio ansehen') + knopf_(CONFIG.INSTAGRAM_URL, 'Auf Instagram folgen', true));
-  }
-
-  if (p.aktion === 'abmelden') {
-    const ergebnis = statusSetzen_(p.token, 'abgemeldet');
-    if (!ergebnis) return seite_('Link ungültig', '<p>Dieser Abmeldelink ist ungültig. Falls du weiterhin E-Mails bekommst, antworte einfach auf eine Ausgabe.</p>');
-    return seite_('Abgemeldet',
-      '<p class="gross">Du bist abgemeldet.</p><p>Du bekommst keine weiteren E-Mails mehr von uns. Schade, dass du gehst!</p>' +
-      '<p>Versehentlich abgemeldet?</p>' + knopf_(CONFIG.FUNNEL_URL, 'Wieder anmelden', true));
+  // Ältere Links, die direkt auf das Skript zeigen: nichts automatisch ändern (E-Mail-Scanner rufen Links auf),
+  // sondern auf die Seite mit Bestätigungsknopf weiterleiten.
+  if (p.aktion === 'bestaetigen' || p.aktion === 'abmelden') {
+    return seite_(p.aktion === 'bestaetigen' ? 'Nur noch ein Klick' : 'Newsletter abbestellen?',
+      '<p>Bitte fahre auf der folgenden Seite fort.</p>' + knopf_(aktionsLink_(p.aktion, p.token || ''), 'Weiter'));
   }
 
   if (p.aktion === 'statistik') {
