@@ -48,10 +48,10 @@ Ohne Web-App-Adresse in `config.js` laufen Funnel und Dashboard im **Demo-Modus*
 
 ### Schritt 3 – GitHub Pages
 
-1. Neues Repository auf GitHub anlegen, zum Beispiel `newsletter-funnel`, und alle Dateien dieses Ordners hochladen (außer du willst `apps-script/` privat halten – es enthält keine Geheimnisse).
+1. Neues Repository auf GitHub anlegen, zum Beispiel `funnel`, und alle Dateien dieses Ordners hochladen (außer du willst `apps-script/` privat halten – es enthält keine Geheimnisse).
 2. In `config.js` die Web-App-Adresse eintragen.
 3. Im Repository: **Settings → Pages → Branch: main, Ordner: / (root) → Save**.
-4. Nach etwa einer Minute ist der Funnel unter `https://DEIN-NAME.github.io/newsletter-funnel/` erreichbar, das Dashboard unter `…/dashboard.html`.
+4. Nach etwa einer Minute ist der Funnel unter `https://felixbusiness.github.io/funnel/` erreichbar, das Dashboard unter `…/dashboard.html`.
 5. Die Funnel-Adresse in `Code.gs` bei `FUNNEL_URL` eintragen (für die Links in den Mails) und neu bereitstellen.
 
 ### Schritt 4 – Testen
@@ -64,7 +64,7 @@ Ohne Web-App-Adresse in `config.js` laufen Funnel und Dashboard im **Demo-Modus*
 ### Instagram-Link
 
 Für die Herkunftsauswertung den Link mit Quelle angeben:
-`https://DEIN-NAME.github.io/newsletter-funnel/?utm_source=instagram`
+`https://felixbusiness.github.io/funnel/?utm_source=instagram`
 (für eine Story zum Beispiel `?utm_source=instagram-story`).
 
 ---

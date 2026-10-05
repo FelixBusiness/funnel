@@ -19,10 +19,10 @@ const CONFIG = {
   ABSENDER_NAME: 'Nebenwerte Wochenbrief',
   // Nach der ersten Bereitstellung als Web-App hier die Adresse eintragen (endet auf /exec)
   WEB_APP_URL: '',
-  FUNNEL_URL: 'https://DEIN-GITHUB-NAME.github.io/newsletter-funnel/',
+  FUNNEL_URL: 'https://felixbusiness.github.io/funnel/',
   INSTAGRAM_URL: 'https://www.instagram.com/DEIN_PROFIL/',
   WIKIFOLIO_URL: 'https://www.wikifolio.com/',
-  IMPRESSUM_URL: 'https://DEIN-GITHUB-NAME.github.io/newsletter-funnel/impressum.html',
+  IMPRESSUM_URL: 'https://felixbusiness.github.io/funnel/impressum.html',
   ZEITZONE: 'Europe/Berlin',
   // Wochenabschluss: Sonntag um 17 Uhr wird das neue Wochenblatt angelegt
   WOCHENABSCHLUSS_TAG: ScriptApp.WeekDay.SUNDAY,
