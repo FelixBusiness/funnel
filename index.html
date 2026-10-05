@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nebenwerte Wochenbrief</title>
+  <meta name="description" content="Jeden Sonntag eine fundierte Einschätzung zu deutschen Nebenwerten – kostenlos.">
+  <meta name="theme-color" content="#14213a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --papier: #f4f1ea;
+      --karte: #ffffff;
+      --tinte: #14213a;
+      --tinte-weich: #4a5568;
+      --linie: #e3ddd0;
+      --akzent: #14365c;
+      --akzent-hell: #e8eef6;
+      --gold: #b8873b;
+      --fehler: #b42318;
+      --schatten: 0 1px 2px rgba(20, 33, 58, .06), 0 8px 24px rgba(20, 33, 58, .06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --papier: #0f1626;
+        --karte: #182235;
+        --tinte: #eef1f6;
+        --tinte-weich: #a6b0c2;
+        --linie: #2a3650;
+        --akzent: #8fb4e3;
+        --akzent-hell: #1f2d47;
+        --gold: #d9a95c;
+        --fehler: #ff8a80;
+        --schatten: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: var(--papier);
+      color: var(--tinte);
+      font-family: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .rahmen {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+    }
+    header.kopf {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 44px;
+    }
+    .zurueck {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--linie);
+      background: var(--karte);
+      color: var(--tinte);
+      font-size: 18px;
+      cursor: pointer;
+      visibility: hidden;
+    }
+    .zurueck.sichtbar { visibility: visible; }
+    .fortschritt {
+      flex: 1;
+      height: 6px;
+      border-radius: 99px;
+      background: var(--linie);
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .fortschritt.sichtbar { opacity: 1; }
+    .fortschritt span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--akzent);
+      border-radius: 99px;
+      transition: width .4s cubic-bezier(.2, .8, .2, 1);
+    }
+    .marke {
+      font-family: Fraunces, Georgia, serif;
+      font-weight: 650;
+      font-size: 15px;
+      letter-spacing: .02em;
+    }
+    main { flex: 1; display: flex; flex-direction: column; position: relative; }
+    .bildschirm {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding-top: 24px;
+      animation: rein .35s cubic-bezier(.2, .8, .2, 1);
+    }
+    .bildschirm.rueckwaerts { animation-name: reinZurueck; }
+    @keyframes rein { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+    @keyframes reinZurueck { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .bildschirm { animation: none; } }
+
+    .ueberzeile {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 10px;
+    }
+    h1, h2 {
+      font-family: Fraunces, Georgia, serif;
+      font-weight: 650;
+      letter-spacing: -.01em;
+      margin: 0 0 10px;
+      line-height: 1.15;
+    }
+    h1:focus, h2:focus { outline: none; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 26px; }
+    .unter { color: var(--tinte-weich); margin: 0 0 24px; }
+
+    .antworten { display: grid; gap: 10px; }
+    .antwort {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      min-height: 64px;
+      padding: 14px 16px;
+      text-align: left;
+      font: inherit;
+      font-weight: 500;
+      color: var(--tinte);
+      background: var(--karte);
+      border: 1.5px solid var(--linie);
+      border-radius: 16px;
+      box-shadow: var(--schatten);
+      cursor: pointer;
+      transition: border-color .15s, transform .1s, background .15s;
+    }
+    .antwort:hover { border-color: var(--akzent); }
+    .antwort:active { transform: scale(.985); }
+    .antwort:focus-visible { outline: 3px solid var(--akzent); outline-offset: 2px; }
+    .antwort .symbol {
+      flex: none;
+      width: 40px; height: 40px;
+      display: grid; place-items: center;
+      font-size: 20px;
+      background: var(--akzent-hell);
+      border-radius: 12px;
+    }
+    .antwort .hinweis { display: block; font-size: 13px; font-weight: 400; color: var(--tinte-weich); }
+    .antwort[aria-pressed="true"] { border-color: var(--akzent); background: var(--akzent-hell); }
+    .antwort .haken {
+      margin-left: auto;
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      border: 1.5px solid var(--linie);
+      flex: none;
+      display: grid; place-items: center;
+      font-size: 13px;
+      color: transparent;
+    }
+    .antwort[aria-pressed="true"] .haken { background: var(--akzent); border-color: var(--akzent); color: var(--karte); }
+
+    .aktionen { margin-top: auto; padding-top: 24px; display: grid; gap: 10px; }
+    .knopf {
+      display: block;
+      width: 100%;
+      min-height: 56px;
+      padding: 14px 20px;
+      font: inherit;
+      font-weight: 600;
+      font-size: 17px;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      background: var(--akzent);
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    @media (prefers-color-scheme: dark) { .knopf { color: #0f1626; } }
+    .knopf:active { transform: scale(.985); }
+    .knopf:disabled { opacity: .4; cursor: not-allowed; }
+    .knopf.zweit { background: transparent; color: var(--akzent); border: 1.5px solid var(--linie); }
+    .knopf.text { background: none; color: var(--tinte-weich); min-height: 44px; font-weight: 500; font-size: 15px; }
+
+    .vertrauen { display: grid; gap: 12px; margin: 8px 0 24px; padding: 0; list-style: none; }
+    .vertrauen li { display: flex; gap: 12px; align-items: flex-start; }
+    .vertrauen .punkt {
+      flex: none; width: 28px; height: 28px; border-radius: 9px;
+      display: grid; place-items: center; font-size: 14px;
+      background: var(--akzent-hell); color: var(--akzent); font-weight: 600;
+    }
+    .beleg {
+      display: flex; gap: 14px; align-items: center;
+      padding: 14px 16px; border-radius: 16px;
+      background: var(--karte); border: 1px solid var(--linie);
+      font-size: 14px; color: var(--tinte-weich);
+    }
+    .beleg strong { display: block; color: var(--tinte); font-size: 15px; }
+
+    textarea, input[type=text], input[type=email] {
+      width: 100%;
+      font: inherit;
+      color: var(--tinte);
+      background: var(--karte);
+      border: 1.5px solid var(--linie);
+      border-radius: 14px;
+      padding: 14px 16px;
+      min-height: 54px;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    textarea:focus, input:focus { outline: none; border-color: var(--akzent); box-shadow: 0 0 0 3px var(--akzent-hell); }
+    label.feld { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px; }
+
+    .profil {
+      background: var(--karte);
+      border: 1px solid var(--linie);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--schatten);
+      margin-bottom: 8px;
+    }
+    .profil h2 { font-size: 24px; margin-bottom: 6px; }
+    .profil p { margin: 0 0 12px; color: var(--tinte-weich); }
+    .profil ul { margin: 0; padding-left: 20px; }
+    .profil li { margin: 6px 0; }
+
+    .einwilligung { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--tinte-weich); margin-top: 16px; cursor: pointer; }
+    .einwilligung input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: var(--akzent); }
+    .einwilligung a, .fuss a { color: inherit; }
+    .fehler { color: var(--fehler); font-size: 14px; min-height: 20px; margin: 8px 0 0; }
+    .honig { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+    .fuss { font-size: 12px; color: var(--tinte-weich); text-align: center; padding-top: 20px; }
+    .fuss a { margin: 0 6px; }
+    .demo {
+      font-size: 13px; padding: 10px 12px; border-radius: 12px;
+      background: var(--akzent-hell); color: var(--tinte); margin-top: 16px;
+    }
+    .gross-symbol { font-size: 52px; margin: 12px 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="rahmen">
+    <header class="kopf">
+      <button class="zurueck" id="zurueck" aria-label="Zurück">←</button>
+      <div class="fortschritt" id="fortschritt" role="progressbar" aria-label="Fortschritt"><span></span></div>
+      <div class="marke" id="marke"></div>
+    </header>
+    <main id="buehne" aria-live="polite"></main>
+    <footer class="fuss">
+      <a href="impressum.html">Impressum</a>·<a href="datenschutz.html">Datenschutz</a>
+    </footer>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="fragen.js"></script>
+  <script>
+  (function () {
+    const C = window.NEWSLETTER_CONFIG;
+    const F = window.FUNNEL;
+    const buehne = document.getElementById('buehne');
+    const zurueckKnopf = document.getElementById('zurueck');
+    const fortschritt = document.getElementById('fortschritt');
+    document.getElementById('marke').textContent = C.NEWSLETTER_NAME;
+
+    // Schritt-Nummer für den Fortschrittsbalken (Verzweigungen teilen sich eine Stufe)
+    const STUFE = { investiert: 1, nebenwerte: 2, huerde: 2, horizont: 3, themen: 4, wunsch: 5, premium: 6, ergebnis: 7 };
+    const STUFEN = 7;
+
+    const parameter = new URLSearchParams(location.search);
+    const quelle = parameter.get('utm_source') || parameter.get('quelle') || (document.referrer ? new URL(document.referrer).hostname : 'direkt');
+    const sitzung = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()).slice(0, 36);
+
+    const antworten = {};
+    const verlauf = []; // Liste der besuchten Bildschirme
+    const gemeldet = {};
+
+    function melden(schritt) {
+      if (gemeldet[schritt] || !C.WEB_APP_URL) return;
+      gemeldet[schritt] = true;
+      try {
+        fetch(C.WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          keepalive: true,
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ typ: 'ereignis', sitzung: sitzung, schritt: schritt, quelle: quelle })
+        });
+      } catch (e) { /* Statistik ist nicht kritisch */ }
+    }
+
+    function el(tag, attribute, kinder) {
+      const e = document.createElement(tag);
+      Object.entries(attribute || {}).forEach(([k, v]) => {
+        if (k === 'text') e.textContent = v;
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v);
+      });
+      (kinder || []).forEach(k => k && e.appendChild(k));
+      return e;
+    }
+
+    function zeigen(id, rueckwaerts) {
+      if (!rueckwaerts) verlauf.push(id);
+      const bildschirm = el('section', { class: 'bildschirm' + (rueckwaerts ? ' rueckwaerts' : '') });
+      if (id === 'start') baueStart(bildschirm);
+      else if (id === 'ergebnis') baueErgebnis(bildschirm);
+      else if (id === 'danke') baueDanke(bildschirm);
+      else baueFrage(id, bildschirm);
+      buehne.replaceChildren(bildschirm);
+
+      zurueckKnopf.classList.toggle('sichtbar', verlauf.length > 1 && id !== 'danke');
+      fortschritt.classList.toggle('sichtbar', !!STUFE[id]);
+      fortschritt.firstElementChild.style.width = ((STUFE[id] || 0) / STUFEN * 100) + '%';
+      fortschritt.setAttribute('aria-valuenow', STUFE[id] || 0);
+      fortschritt.setAttribute('aria-valuemax', STUFEN);
+      window.scrollTo(0, 0);
+      const fokus = bildschirm.querySelector('h1, h2');
+      if (fokus) { fokus.setAttribute('tabindex', '-1'); fokus.focus({ preventScroll: true }); }
+      melden(id === 'danke' ? 'abgeschickt' : id);
+    }
+
+    zurueckKnopf.addEventListener('click', function () {
+      if (verlauf.length < 2) return;
+      verlauf.pop();
+      zeigen(verlauf[verlauf.length - 1], true);
+    });
+
+    // ---------- Startseite ----------
+    function baueStart(b) {
+      b.append(
+        el('p', { class: 'ueberzeile', text: 'Kostenlos · jeden Sonntag' }),
+        el('h1', { text: 'Deutsche Nebenwerte, die sonst keiner auf dem Schirm hat.' }),
+        el('p', { class: 'unter', text: 'Jede Woche eine fundierte Einschätzung – kurz, ehrlich und ohne Börsenlärm. Beantworte sechs kurze Fragen, damit der Newsletter zu dir passt.' }),
+        el('ul', { class: 'vertrauen' }, [
+          punkt('1', 'Marktüberblick in fünf Minuten Lesezeit'),
+          punkt('2', 'Eine Idee der Woche – mit Chancen und Risiken'),
+          punkt('3', 'Transparent: unser Musterportfolio ist öffentlich auf Wikifolio')
+        ]),
+        el('div', { class: 'beleg' }, [
+          el('span', { text: '🔒', style: 'font-size:22px' }),
+          el('div', {}, [
+            el('strong', { text: 'Keine Werbung, kein Spam' }),
+            document.createTextNode('Abmeldung jederzeit mit einem Klick.')
+          ])
+        ]),
+        el('div', { class: 'aktionen' }, [
+          el('button', { class: 'knopf', text: 'In 30 Sekunden starten', onclick: () => zeigen(F.start) })
+        ])
+      );
+    }
+    function punkt(n, text) {
+      return el('li', {}, [el('span', { class: 'punkt', text: n }), el('span', { text: text })]);
+    }
+
+    // ---------- Fragen ----------
+    function baueFrage(id, b) {
+      const f = F.fragen[id];
+      b.append(el('h2', { text: f.titel }));
+      if (f.untertitel) b.append(el('p', { class: 'unter', text: f.untertitel }));
+
+      if (f.typ === 'einfach') {
+        const liste = el('div', { class: 'antworten', role: 'list' });
+        f.antworten.forEach(a => {
+          const knopf = antwortKnopf(a, antworten[id] === a.text, false);
+          knopf.addEventListener('click', () => {
+            antworten[id] = a.text;
+            entferneVerworfeneAntworten();
+            knopf.setAttribute('aria-pressed', 'true');
+            setTimeout(() => zeigen(a.weiter), 180);
+          });
+          liste.append(knopf);
+        });
+        b.append(liste);
+      }
+
+      if (f.typ === 'mehrfach') {
+        const gewaehlt = new Set(antworten[id] || []);
+        const weiterKnopf = el('button', { class: 'knopf', text: 'Weiter' });
+        const aktualisieren = () => { weiterKnopf.disabled = gewaehlt.size === 0; };
+        const liste = el('div', { class: 'antworten', role: 'group' });
+        f.antworten.forEach(a => {
+          const knopf = antwortKnopf(a, gewaehlt.has(a.text), true);
+          knopf.addEventListener('click', () => {
+            if (gewaehlt.has(a.text)) gewaehlt.delete(a.text); else gewaehlt.add(a.text);
+            knopf.setAttribute('aria-pressed', gewaehlt.has(a.text) ? 'true' : 'false');
+            aktualisieren();
+          });
+          liste.append(knopf);
+        });
+        weiterKnopf.addEventListener('click', () => {
+          antworten[id] = Array.from(gewaehlt);
+          zeigen(f.weiter);
+        });
+        aktualisieren();
+        b.append(liste, el('div', { class: 'aktionen' }, [weiterKnopf]));
+      }
+
+      if (f.typ === 'text') {
+        const feld = el('textarea', { placeholder: f.platzhalter || '', maxlength: '300', 'aria-label': f.titel });
+        feld.value = antworten[id] || '';
+        const weiter = el('button', { class: 'knopf', text: 'Weiter' });
+        weiter.addEventListener('click', () => { antworten[id] = feld.value.trim(); zeigen(f.weiter); });
+        const aktionen = el('div', { class: 'aktionen' }, [weiter]);
+        if (f.ueberspringbar) {
+          aktionen.append(el('button', { class: 'knopf text', text: 'Überspringen', onclick: () => { antworten[id] = ''; zeigen(f.weiter); } }));
+        }
+        b.append(feld, aktionen);
+      }
+    }
+
+    function antwortKnopf(a, gedrueckt, mehrfach) {
+      const inhalt = el('span', {}, [document.createTextNode(a.text)]);
+      if (a.hinweis) inhalt.append(el('span', { class: 'hinweis', text: a.hinweis }));
+      return el('button', { class: 'antwort', 'aria-pressed': gedrueckt ? 'true' : 'false', type: 'button' }, [
+        el('span', { class: 'symbol', text: a.symbol || '•', 'aria-hidden': 'true' }),
+        inhalt,
+        mehrfach ? el('span', { class: 'haken', text: '✓', 'aria-hidden': 'true' }) : null
+      ]);
+    }
+
+    // Wenn jemand zurückgeht und einen anderen Ast wählt, alte Antworten des verlassenen Asts verwerfen
+    function entferneVerworfeneAntworten() {
+      if (antworten.investiert !== 'Ja, auch in Einzelaktien') delete antworten.nebenwerte;
+      if (antworten.investiert !== 'Nein, noch nicht') delete antworten.huerde;
+    }
+
+    // ---------- Ergebnis und Anmeldung ----------
+    function baueErgebnis(b) {
+      const p = F.profil(antworten);
+      const profil = el('div', { class: 'profil' }, [
+        el('p', { class: 'ueberzeile', text: 'Dein Profil' }),
+        el('h2', { text: p.name }),
+        el('p', { text: p.text }),
+        el('ul', {}, p.punkte.map(t => el('li', { text: t })))
+      ]);
+
+      const form = el('form', { novalidate: '' });
+      const vorname = el('input', { type: 'text', id: 'vorname', autocomplete: 'given-name', maxlength: '60', placeholder: 'Dein Vorname' });
+      const email = el('input', { type: 'email', id: 'email', autocomplete: 'email', inputmode: 'email', required: '', placeholder: 'name@beispiel.de' });
+      const honig = el('input', { type: 'text', name: 'website', tabindex: '-1', autocomplete: 'off' });
+      const haken = el('input', { type: 'checkbox', id: 'einwilligung' });
+      const einwilligungsText = 'Ich möchte den kostenlosen ' + C.NEWSLETTER_NAME + ' per E-Mail erhalten. Meine Antworten werden gespeichert, um die Inhalte auf mich abzustimmen. Abmeldung jederzeit möglich.';
+      const fehler = el('p', { class: 'fehler', role: 'alert' });
+      const senden = el('button', { class: 'knopf', type: 'submit', text: 'Kostenlos anmelden' });
+
+      const einwilligung = el('label', { class: 'einwilligung', for: 'einwilligung' }, [haken, el('span', {}, [
+        document.createTextNode(einwilligungsText + ' Mehr in der '),
+        el('a', { href: 'datenschutz.html', target: '_blank', text: 'Datenschutzerklärung' }),
+        document.createTextNode('.')
+      ])]);
+
+      form.append(
+        el('label', { class: 'feld', for: 'email', text: 'E-Mail-Adresse' }), email,
+        el('label', { class: 'feld', for: 'vorname', text: 'Vorname (optional)' }), vorname,
+        el('div', { class: 'honig', 'aria-hidden': 'true' }, [honig]),
+        einwilligung, fehler,
+        el('div', { class: 'aktionen' }, [senden])
+      );
+
+      form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        fehler.textContent = '';
+        const adresse = email.value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(adresse)) { fehler.textContent = 'Bitte gib eine gültige E-Mail-Adresse ein.'; email.focus(); return; }
+        if (!haken.checked) { fehler.textContent = 'Bitte bestätige die Einwilligung.'; return; }
+
+        senden.disabled = true;
+        senden.textContent = 'Wird gesendet …';
+        const daten = {
+          typ: 'anmeldung',
+          email: adresse,
+          vorname: vorname.value.trim(),
+          antworten: antworten,
+          profil: p.name,
+          quelle: quelle,
+          einwilligung: true,
+          einwilligungstext: einwilligungsText,
+          website: honig.value
+        };
+
+        if (!C.WEB_APP_URL) {
+          // Demo-Modus: nichts wird gespeichert
+          console.info('Demo-Modus – diese Daten würden gesendet:', daten);
+          window.__letzteAnmeldung = daten;
+          zeigen('danke');
+          return;
+        }
+        try {
+          const antwort = await fetch(C.WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(daten)
+          });
+          const ergebnis = await antwort.json();
+          if (!ergebnis.ok) throw new Error(ergebnis.fehler || 'Unbekannter Fehler');
+          zeigen('danke');
+        } catch (e) {
+          fehler.textContent = (e && e.message && e.message.length < 120 && !/fetch|JSON/i.test(e.message))
+            ? e.message
+            : 'Das hat leider nicht geklappt. Bitte versuche es in einer Minute noch einmal.';
+          senden.disabled = false;
+          senden.textContent = 'Kostenlos anmelden';
+        }
+      });
+
+      b.append(profil, form);
+    }
+
+    // ---------- Danke ----------
+    function baueDanke(b) {
+      b.append(
+        el('div', { class: 'gross-symbol', text: '📬', 'aria-hidden': 'true' }),
+        el('h1', { text: 'Fast geschafft!' }),
+        el('p', { class: 'unter', text: 'Wir haben dir eine E-Mail geschickt. Bitte klicke dort auf „Anmeldung bestätigen“ – erst dann bist du dabei. Schau auch im Spam- oder Werbeordner nach.' }),
+        el('div', { class: 'aktionen' }, [
+          el('a', { class: 'knopf', href: C.WIKIFOLIO_URL, target: '_blank', rel: 'noopener', text: 'Musterportfolio ansehen' }),
+          el('a', { class: 'knopf zweit', href: C.INSTAGRAM_URL, target: '_blank', rel: 'noopener', text: 'Auf Instagram folgen' })
+        ])
+      );
+      if (!C.WEB_APP_URL) {
+        b.append(el('p', { class: 'demo', text: 'Demo-Modus: Es wurde nichts gespeichert, weil in config.js noch keine Web-App-Adresse eingetragen ist. Die gesammelten Antworten stehen in der Browser-Konsole.' }));
+      }
+    }
+
+    zeigen('start');
+  })();
+  </script>
+</body>
+</html>

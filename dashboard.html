@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Newsletter Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --papier: #f4f1ea; --karte: #ffffff; --tinte: #14213a; --weich: #5b6577; --linie: #e3ddd0;
+      --serie1: #14365c; --serie2: #2f8f6b; --serie3: #c2563a; --spur: #ece7dc;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --papier: #0f1626; --karte: #182235; --tinte: #eef1f6; --weich: #a6b0c2; --linie: #2a3650;
+        --serie1: #8fb4e3; --serie2: #5cc49b; --serie3: #f08a6c; --spur: #22304a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--papier); color: var(--tinte); font-family: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 15px; line-height: 1.45; }
+    .seite { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+    header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+    h1 { font-family: Fraunces, Georgia, serif; font-size: 30px; margin: 0; letter-spacing: -.01em; }
+    h2 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+    .stand { color: var(--weich); font-size: 13px; }
+    .zugang { display: flex; gap: 8px; flex-wrap: wrap; }
+    .zugang input { font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--tinte); width: 220px; max-width: 100%; }
+    .zugang button { font: inherit; font-weight: 600; padding: 9px 14px; border-radius: 10px; border: none; background: var(--serie1); color: var(--karte); cursor: pointer; }
+    .hinweis { background: var(--karte); border: 1px dashed var(--linie); padding: 10px 14px; border-radius: 12px; color: var(--weich); font-size: 13px; margin-bottom: 16px; }
+    .fehler { color: var(--serie3); }
+
+    .kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .kachel { background: var(--karte); border: 1px solid var(--linie); border-radius: 16px; padding: 16px; }
+    .kachel .wert { font-family: Fraunces, Georgia, serif; font-size: 34px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .kachel .name { color: var(--weich); font-size: 13px; }
+    .kachel.haupt { background: var(--serie1); border-color: var(--serie1); color: var(--karte); }
+    .kachel.haupt .name { color: var(--karte); opacity: .8; }
+
+    .raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+    .karte { background: var(--karte); border: 1px solid var(--linie); border-radius: 16px; padding: 18px; min-width: 0; }
+    .karte.breit { grid-column: 1 / -1; }
+    .unterzeile { color: var(--weich); font-size: 13px; margin: 0 0 14px; }
+    .legende { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--weich); margin-bottom: 8px; }
+    .legende i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    svg { display: block; width: 100%; height: auto; overflow: visible; }
+    svg text { fill: var(--weich); font-size: 11px; font-family: Inter, sans-serif; }
+
+    .balken { display: grid; gap: 8px; }
+    .balken .zeile { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 10px; align-items: center; font-size: 13px; line-height: 1.3; }
+    .balken .bezeichnung { overflow-wrap: anywhere; }
+    .balken .spur { display: block; height: 12px; background: var(--spur); border-radius: 4px; overflow: hidden; }
+    .balken .fuellung { display: block; height: 100%; min-width: 2px; background: var(--serie1); border-radius: 4px; }
+    .balken .zahl { text-align: right; font-variant-numeric: tabular-nums; color: var(--weich); }
+    .balken .zeile.abbruch .fuellung { background: var(--serie2); }
+
+    .wuensche { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow: auto; }
+    .wuensche li { padding: 8px 0; border-bottom: 1px solid var(--linie); display: flex; gap: 12px; }
+    .wuensche .datum { color: var(--weich); font-size: 12px; flex: none; width: 80px; font-variant-numeric: tabular-nums; }
+    .tooltip { position: fixed; pointer-events: none; background: var(--tinte); color: var(--papier); font-size: 12px; padding: 6px 9px; border-radius: 8px; opacity: 0; transition: opacity .1s; z-index: 5; }
+    @media (max-width: 420px) { .raster { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="seite">
+    <header>
+      <div>
+        <h1>Newsletter Dashboard</h1>
+        <div class="stand" id="stand">Lädt …</div>
+      </div>
+      <form class="zugang" id="zugang">
+        <input type="password" id="schluessel" placeholder="Dashboard-Schlüssel" autocomplete="off" aria-label="Dashboard-Schlüssel">
+        <button type="submit">Laden</button>
+      </form>
+    </header>
+    <div id="meldung"></div>
+    <div id="inhalt"></div>
+  </div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <script src="config.js"></script>
+  <script>
+  (function () {
+    const C = window.NEWSLETTER_CONFIG;
+    const SCHRITT_NAMEN = {
+      start: 'Startseite', investiert: 'Frage: investiert?', nebenwerte: 'Frage: Nebenwerte', huerde: 'Frage: Hürde',
+      horizont: 'Frage: Zeithorizont', themen: 'Frage: Themen', wunsch: 'Frage: Aktienwunsch', premium: 'Frage: Premium',
+      ergebnis: 'Profil und Formular', abgeschickt: 'Anmeldung abgeschickt'
+    };
+    const meldung = document.getElementById('meldung');
+    const inhalt = document.getElementById('inhalt');
+    const tooltip = document.getElementById('tooltip');
+    const feld = document.getElementById('schluessel');
+
+    function speicherLesen() { try { return localStorage.getItem('dashboard-schluessel') || ''; } catch (e) { return ''; } }
+    function speicherSchreiben(w) { try { localStorage.setItem('dashboard-schluessel', w); } catch (e) { /* egal */ } }
+
+    document.getElementById('zugang').addEventListener('submit', ev => {
+      ev.preventDefault();
+      speicherSchreiben(feld.value.trim());
+      laden();
+    });
+    feld.value = speicherLesen();
+
+    async function laden() {
+      meldung.innerHTML = '';
+      if (!C.WEB_APP_URL) {
+        meldung.innerHTML = '<div class="hinweis">Demo-Modus mit erfundenen Zahlen. Trage in <code>config.js</code> die Web-App-Adresse ein und gib oben deinen Dashboard-Schlüssel ein, um echte Daten zu sehen.</div>';
+        zeichnen(demoDaten());
+        return;
+      }
+      const schluessel = feld.value.trim();
+      if (!schluessel) {
+        document.getElementById('stand').textContent = 'Bitte Dashboard-Schlüssel eingeben.';
+        return;
+      }
+      document.getElementById('stand').textContent = 'Lädt …';
+      try {
+        const antwort = await fetch(C.WEB_APP_URL + '?aktion=statistik&schluessel=' + encodeURIComponent(schluessel));
+        const daten = await antwort.json();
+        if (!daten.ok) throw new Error(daten.fehler || 'Fehler beim Laden');
+        zeichnen(daten);
+      } catch (e) {
+        document.getElementById('stand').textContent = '';
+        meldung.innerHTML = '<div class="hinweis fehler">' + esc(e.message || 'Daten konnten nicht geladen werden.') + '</div>';
+      }
+    }
+
+    function zeichnen(d) {
+      document.getElementById('stand').textContent = 'Stand: ' + d.stand.replace('T', ', ').slice(0, 17) + ' Uhr';
+      const s = d.summen;
+      const start = (d.funnel.find(f => f.schritt === 'start') || {}).sitzungen || 0;
+      const fertig = (d.funnel.find(f => f.schritt === 'abgeschickt') || {}).sitzungen || 0;
+      const quote = start ? Math.round(fertig / start * 100) + ' %' : '–';
+
+      inhalt.innerHTML = '';
+      inhalt.append(html(
+        '<div class="kacheln">' +
+          kachel(s.aktiv, 'Aktive Abonnenten', true) +
+          kachel('+' + s.neu7, 'Neu bestätigt (7 Tage)') +
+          kachel(s.abgemeldet7, 'Abgemeldet (7 Tage)') +
+          kachel(s.ausstehend, 'Noch nicht bestätigt') +
+          kachel(quote, 'Funnel-Abschluss (30 Tage)') +
+          kachel(s.premium, 'Premium-Warteliste') +
+        '</div>'
+      ));
+
+      const raster = html('<div class="raster"></div>');
+      raster.append(
+        karte('Entwicklung der aktiven Abonnenten', 'Letzte 12 Wochen', verlaufGrafik(d.verlauf), true),
+        karte('Neuanmeldungen und Abmeldungen pro Woche', 'Bestätigte Anmeldungen gegenüber Abmeldungen', wochenBalken(d.verlauf), true),
+        karte('Wo steigen Besucher aus?', 'Besucher pro Funnel-Schritt in den letzten 30 Tagen', trichter(d.funnel)),
+        karte('Herkunft der Besucher', 'Quelle beim ersten Aufruf (30 Tage)', balken(d.quellen)),
+        karte('Investiert?', 'Aktive Abonnenten', balken(d.verteilungen.investiert)),
+        karte('Zeithorizont', 'Aktive Abonnenten', balken(d.verteilungen.horizont)),
+        karte('Themeninteressen', 'Mehrfachnennungen möglich', balken(d.verteilungen.themen)),
+        karte('Größte Hürde', 'Nur Nicht-Investierte', balken(d.verteilungen.huerde)),
+        karte('Nebenwerte im Depot?', 'Nur Einzelaktien-Anleger', balken(d.verteilungen.nebenwerte)),
+        karte('Premium-Interesse', 'Aktive Abonnenten', balken(d.verteilungen.premium)),
+        karte('Aktienwünsche der Leser', 'Dein Content-Radar – neueste zuerst', wunschliste(d.wuensche), true)
+      );
+      inhalt.append(raster);
+    }
+
+    // ---------- Bausteine ----------
+    function kachel(wert, name, haupt) {
+      return '<div class="kachel' + (haupt ? ' haupt' : '') + '"><div class="wert">' + esc(String(wert)) + '</div><div class="name">' + esc(name) + '</div></div>';
+    }
+    function karte(titel, unter, koerper, breit) {
+      const k = html('<section class="karte' + (breit ? ' breit' : '') + '"><h2>' + esc(titel) + '</h2><p class="unterzeile">' + esc(unter) + '</p></section>');
+      k.append(koerper);
+      return k;
+    }
+    function balken(objekt) {
+      const eintraege = Object.entries(objekt || {}).sort((a, b) => b[1] - a[1]);
+      if (!eintraege.length) return html('<p class="unterzeile">Noch keine Daten.</p>');
+      const max = Math.max.apply(null, eintraege.map(e => e[1]));
+      const summe = eintraege.reduce((a, e) => a + e[1], 0);
+      const box = html('<div class="balken"></div>');
+      eintraege.forEach(([name, wert]) => {
+        box.append(html('<div class="zeile" title="' + esc(name) + ': ' + wert + ' (' + Math.round(wert / summe * 100) + ' %)">' +
+          '<span class="bezeichnung">' + esc(name) + '</span>' +
+          '<span class="spur"><span class="fuellung" style="width:' + (wert / max * 100) + '%"></span></span>' +
+          '<span class="zahl">' + wert + '</span></div>'));
+      });
+      return box;
+    }
+    function trichter(schritte) {
+      const start = (schritte[0] && schritte[0].sitzungen) || 0;
+      if (!start) return html('<p class="unterzeile">Noch keine Besucher erfasst.</p>');
+      const box = html('<div class="balken"></div>');
+      schritte.forEach(s => {
+        // Verzweigungsfragen sehen nur Teile der Besucher – Prozent daher immer relativ zur Startseite
+        const anteil = Math.round(s.sitzungen / start * 100);
+        box.append(html('<div class="zeile abbruch" title="' + esc(SCHRITT_NAMEN[s.schritt] || s.schritt) + ': ' + s.sitzungen + ' Besucher">' +
+          '<span class="bezeichnung">' + esc(SCHRITT_NAMEN[s.schritt] || s.schritt) + '</span>' +
+          '<span class="spur"><span class="fuellung" style="width:' + anteil + '%"></span></span>' +
+          '<span class="zahl">' + anteil + ' %</span></div>'));
+      });
+      box.append(html('<p class="unterzeile" style="margin:8px 0 0">„Nebenwerte“ und „Hürde“ sind Verzweigungen und sehen nur einen Teil der Besucher.</p>'));
+      return box;
+    }
+    function wunschliste(liste) {
+      if (!liste || !liste.length) return html('<p class="unterzeile">Noch keine Wünsche.</p>');
+      const ul = html('<ul class="wuensche"></ul>');
+      liste.forEach(w => ul.append(html('<li><span class="datum">' + esc(w.datum) + '</span><span>' + esc(w.text) + '</span></li>')));
+      return ul;
+    }
+
+    function verlaufGrafik(v) {
+      const B = breiteDiagramm(), H = 220, L = 36, R = 12, O = 14, U = 28;
+      const max = Math.max(5, Math.max.apply(null, v.map(w => w.aktiv)));
+      const oben = Math.ceil(max / 5) * 5;
+      const x = i => L + (B - L - R) * (v.length === 1 ? 0.5 : i / (v.length - 1));
+      const y = w => O + (H - O - U) * (1 - w / oben);
+      let s = '<svg viewBox="0 0 ' + B + ' ' + H + '" role="img" aria-label="Aktive Abonnenten pro Woche">';
+      for (let i = 0; i <= 4; i++) {
+        const w = oben / 4 * i;
+        s += '<line x1="' + L + '" x2="' + (B - R) + '" y1="' + y(w) + '" y2="' + y(w) + '" stroke="var(--linie)" stroke-width="1"/>';
+        s += '<text x="' + (L - 8) + '" y="' + (y(w) + 4) + '" text-anchor="end">' + Math.round(w) + '</text>';
+      }
+      const punkte = v.map((w, i) => x(i) + ',' + y(w.aktiv)).join(' ');
+      s += '<polygon points="' + L + ',' + y(0) + ' ' + punkte + ' ' + x(v.length - 1) + ',' + y(0) + '" fill="var(--serie1)" opacity=".1"/>';
+      s += '<polyline points="' + punkte + '" fill="none" stroke="var(--serie1)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+      v.forEach((w, i) => {
+        s += '<circle cx="' + x(i) + '" cy="' + y(w.aktiv) + '" r="' + (i === v.length - 1 ? 5 : 3) + '" fill="var(--serie1)" stroke="var(--karte)" stroke-width="2" data-tip="' + esc(w.woche) + ': ' + w.aktiv + ' aktiv"/>';
+        if (i % 2 === v.length % 2 || i === v.length - 1) s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(w.woche.replace('Woche ', 'KW ')) + '</text>';
+      });
+      s += '</svg>';
+      return tooltips(html(s));
+    }
+
+    function wochenBalken(v) {
+      const B = breiteDiagramm(), H = 200, L = 36, R = 12, O = 14, U = 28;
+      const max = Math.max(4, Math.max.apply(null, v.map(w => Math.max(w.neu, w.abgemeldet))));
+      const oben = Math.ceil(max / 4) * 4;
+      const breite = (B - L - R) / v.length;
+      const y = w => O + (H - O - U) * (1 - w / oben);
+      let s = '<svg viewBox="0 0 ' + B + ' ' + H + '" role="img" aria-label="Neuanmeldungen und Abmeldungen pro Woche">';
+      for (let i = 0; i <= 4; i++) {
+        const w = oben / 4 * i;
+        s += '<line x1="' + L + '" x2="' + (B - R) + '" y1="' + y(w) + '" y2="' + y(w) + '" stroke="var(--linie)"/>';
+        s += '<text x="' + (L - 8) + '" y="' + (y(w) + 4) + '" text-anchor="end">' + Math.round(w) + '</text>';
+      }
+      v.forEach((w, i) => {
+        const x0 = L + i * breite + breite * 0.18;
+        const b = breite * 0.3;
+        s += '<rect x="' + x0 + '" y="' + y(w.neu) + '" width="' + b + '" height="' + (y(0) - y(w.neu)) + '" rx="3" fill="var(--serie2)" data-tip="' + esc(w.woche) + ': ' + w.neu + ' neu"/>';
+        s += '<rect x="' + (x0 + b + 2) + '" y="' + y(w.abgemeldet) + '" width="' + b + '" height="' + (y(0) - y(w.abgemeldet)) + '" rx="3" fill="var(--serie3)" data-tip="' + esc(w.woche) + ': ' + w.abgemeldet + ' abgemeldet"/>';
+        if (i % 2 === v.length % 2 || i === v.length - 1) s += '<text x="' + (L + i * breite + breite / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(w.woche.replace('Woche ', 'KW ')) + '</text>';
+      });
+      s += '</svg>';
+      const box = html('<div><div class="legende"><span><i style="background:var(--serie2)"></i>Neu bestätigt</span><span><i style="background:var(--serie3)"></i>Abgemeldet</span></div></div>');
+      box.append(tooltips(html(s)));
+      return box;
+    }
+
+    function breiteDiagramm() { return Math.max(340, Math.min(760, window.innerWidth - 70)); }
+
+    function tooltips(svg) {
+      svg.querySelectorAll('[data-tip]').forEach(e => {
+        e.addEventListener('mousemove', ev => {
+          tooltip.textContent = e.getAttribute('data-tip');
+          tooltip.style.left = (ev.clientX + 12) + 'px';
+          tooltip.style.top = (ev.clientY - 28) + 'px';
+          tooltip.style.opacity = 1;
+        });
+        e.addEventListener('mouseleave', () => { tooltip.style.opacity = 0; });
+      });
+      return svg;
+    }
+
+    function html(text) {
+      const t = document.createElement('template');
+      t.innerHTML = text.trim();
+      return t.content.firstElementChild;
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // ---------- Demo-Daten ----------
+    function demoDaten() {
+      const verlauf = [];
+      let aktiv = 0;
+      const heute = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const neu = Math.round(4 + (11 - i) * 1.6 + (i % 3));
+        const ab = Math.round(neu * 0.12 + (i % 2));
+        aktiv += neu - ab;
+        const d = new Date(heute.getTime() - i * 7 * 864e5);
+        verlauf.push({ woche: 'Woche ' + isoWoche(d), aktiv: aktiv, neu: neu, abgemeldet: ab });
+      }
+      return {
+        ok: true,
+        stand: heute.toISOString().slice(0, 16),
+        summen: { aktiv: aktiv, ausstehend: 11, abgemeldet: 19, neu7: verlauf[11].neu, abgemeldet7: verlauf[11].abgemeldet, premium: 34 },
+        verlauf: verlauf,
+        funnel: [['start', 640], ['investiert', 512], ['nebenwerte', 231], ['huerde', 118], ['horizont', 455], ['themen', 431], ['wunsch', 410], ['premium', 398], ['ergebnis', 389], ['abgeschickt', 201]]
+          .map(([schritt, sitzungen]) => ({ schritt: schritt, sitzungen: sitzungen })),
+        quellen: { instagram: 512, direkt: 74, linkedin: 31, wikifolio: 23 },
+        verteilungen: {
+          investiert: { 'Ja, auch in Einzelaktien': 82, 'Ja, aber nur über Indexfonds oder Fonds': 49, 'Nein, noch nicht': 31 },
+          nebenwerte: { 'Ja, regelmäßig': 21, 'Ein paar': 35, 'Nein, noch nicht': 18, 'Was sind Nebenwerte?': 8 },
+          huerde: { 'Mir fehlt das Wissen': 14, 'Mir fehlt die Zeit': 7, 'Ich weiß nicht, wem ich vertrauen kann': 6, 'Ich warte auf den richtigen Zeitpunkt': 4 },
+          horizont: { 'Langfristig für die Rente': 71, 'Mittelfristig (1 bis 5 Jahre)': 45, 'Gemischt': 29, 'Kurzfristig und opportunistisch': 17 },
+          themen: { 'Deutsche Nebenwerte': 96, 'Dividenden': 74, 'Bewertung verstehen lernen': 61, 'Wachstum und Technologie': 58, 'Sondersituationen': 33, 'Makro und Zinsen': 27 },
+          premium: { 'Ja, setz mich auf die Warteliste': 34, 'Vielleicht später': 77, 'Nein, der Gratis-Newsletter reicht mir': 51 }
+        },
+        wuensche: [
+          { datum: '2026-10-04', text: 'Hensoldt nach dem Kursanstieg' },
+          { datum: '2026-10-03', text: 'Wie bewertet man Versorger?' },
+          { datum: '2026-10-01', text: 'Mutares' },
+          { datum: '2026-09-29', text: 'Gute Dividendenwerte im SDAX' },
+          { datum: '2026-09-27', text: 'Pfisterer' }
+        ]
+      };
+    }
+    function isoWoche(datum) {
+      const d = new Date(Date.UTC(datum.getFullYear(), datum.getMonth(), datum.getDate()));
+      const tag = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - tag);
+      return Math.ceil(((d - new Date(Date.UTC(d.getUTCFullYear(), 0, 1))) / 864e5 + 1) / 7);
+    }
+
+    laden();
+  })();
+  </script>
+</body>
+</html>
