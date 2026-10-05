@@ -18,7 +18,7 @@ const CONFIG = {
   NEWSLETTER_NAME: 'Nebenwerte Wochenbrief',
   ABSENDER_NAME: 'Nebenwerte Wochenbrief',
   // Nach der ersten Bereitstellung als Web-App hier die Adresse eintragen (endet auf /exec)
-  WEB_APP_URL: '',
+  WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbxogLtAAEvc4-MgSOhmDWaJIThJtknXjB1wCzsONDRVaruFgnHkpnV5wNblWIwS5Ej1AA/exec',
   FUNNEL_URL: 'https://felixbusiness.github.io/funnel/',
   INSTAGRAM_URL: 'https://www.instagram.com/DEIN_PROFIL/',
   WIKIFOLIO_URL: 'https://www.wikifolio.com/',
